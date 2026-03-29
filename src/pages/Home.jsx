@@ -63,7 +63,7 @@ export default function Home({ student, setStudent, onStart, hasSavedData }) {
             </button>
             <button 
               onClick={() => {
-                setStudent({})
+                setStudent({ name: '', salary: 20000, city: 'Delhi' })
                 setStartedFresh(true)
                 setStep(1)
               }} 

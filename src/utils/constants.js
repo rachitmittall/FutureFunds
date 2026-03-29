@@ -1,10 +1,10 @@
 export const CITY_MINIMUMS = {
-  Delhi: { rent: 8000, food: 6000, transport: 2000, fun: 2000, other: 1000 },
-  Mumbai: { rent: 14000, food: 8000, transport: 3000, fun: 3500, other: 1500 },
-  Bangalore: { rent: 10000, food: 7000, transport: 2500, fun: 3000, other: 1500 },
-  Chennai: { rent: 7500, food: 5500, transport: 1500, fun: 2000, other: 1000 },
-  Kolkata: { rent: 6000, food: 4500, transport: 1200, fun: 1500, other: 800 },
-  Other: { rent: 5000, food: 4000, transport: 1000, fun: 1500, other: 500 },
+  Delhi: { rent: 3000, food: 2500, transport: 800, entertainment: 300, misc: 200 },
+  Mumbai: { rent: 4000, food: 3000, transport: 1000, entertainment: 300, misc: 200 },
+  Bangalore: { rent: 4000, food: 2500, transport: 800, entertainment: 300, misc: 200 },
+  Chennai: { rent: 3000, food: 2500, transport: 700, entertainment: 200, misc: 200 },
+  Kolkata: { rent: 2500, food: 2000, transport: 600, entertainment: 200, misc: 200 },
+  Other: { rent: 2000, food: 2000, transport: 500, entertainment: 200, misc: 200 },
 }
 
 export const ASSET_RETURNS = {

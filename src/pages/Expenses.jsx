@@ -18,7 +18,7 @@ export function getDefaultExpenses() {
   return config.reduce((acc, c) => ({ ...acc, [c.key]: c.defaultValue }), {})
 }
 
-export default function Expenses({ salary, city, expenses, setExpenses, onProceed }) {
+export default function Expenses({ salary, city, expenses, setExpenses, totalExpenses, availableToInvest, onProceed }) {
   const mins = CITY_MINIMUMS[city] ?? CITY_MINIMUMS.Other
 
   useEffect(() => {
@@ -31,9 +31,7 @@ export default function Expenses({ salary, city, expenses, setExpenses, onProcee
     })
   }, [mins, setExpenses])
 
-  const totalExpenses = Object.values(expenses).reduce((s, v) => s + (Number.isFinite(v) ? v : 0), 0)
   const totalMinimum = Object.values(mins).reduce((s, v) => s + v, 0)
-  const available = Math.max(0, salary - totalExpenses)
   const salaryInsufficient = salary < totalMinimum
   const banner = `Minimums set for ${city} — these reflect real cost of living`
   const dividerClass = 'my-5 h-px w-full bg-gradient-to-r from-transparent via-ff-border to-transparent'
@@ -88,21 +86,17 @@ export default function Expenses({ salary, city, expenses, setExpenses, onProcee
       <div className="mt-6 grid gap-4 md:grid-cols-2">
         <div className="rounded-2xl border border-ff-danger/20 bg-ff-danger/5 p-5 shadow-lg">
           <div className="text-sm font-semibold text-ff-danger/80">Total expenses</div>
-          <AnimatedNumber
-            value={totalExpenses}
-            format={formatINR}
-            className="mt-1 block text-2xl font-extrabold tracking-tight text-ff-danger"
-          />
+          <div className="mt-1 block text-2xl font-extrabold tracking-tight text-ff-danger font-mono">
+            {formatINR(totalExpenses || 0)}
+          </div>
         </div>
 
         <div className="relative rounded-2xl p-0.5 bg-gradient-to-r from-ff-neon to-ff-blue shadow-glow animate-glow">
           <div className="h-full w-full rounded-[14px] bg-ff-card p-5">
             <div className="text-sm font-extrabold text-white">💰 Available to Invest</div>
-            <AnimatedNumber
-              value={available}
-              format={formatINR}
-              className="mt-1 block text-4xl font-extrabold tracking-tight text-ff-neon"
-            />
+            <div className="mt-1 block text-4xl font-extrabold tracking-tight text-ff-neon font-mono">
+              {formatINR(availableToInvest || 0)}
+            </div>
             <div className="mt-1 text-sm text-ff-textSec">Updates live as you adjust your expenses.</div>
           </div>
         </div>

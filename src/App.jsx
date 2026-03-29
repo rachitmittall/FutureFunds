@@ -45,12 +45,14 @@ export default function App() {
   const [hasSavedData, setHasSavedData] = useState(false)
   const [helpOpen, setHelpOpen] = useState(false)
 
+  console.log('Student state:', student)
+
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY)
       if (!raw) return
       const data = JSON.parse(raw)
-      if (data.student) setStudent(data.student)
+      if (data.student) setStudent(prev => ({ ...prev, ...data.student }))
       if (data.expenses) setExpenses(data.expenses)
       if (data.allocations) setAllocations(data.allocations)
       if (data.stockPortfolio) setStockPortfolio(data.stockPortfolio)
@@ -64,17 +66,21 @@ export default function App() {
 
   const salary = Number.isFinite(student.salary) ? student.salary : 0
   const totalExpenses = useMemo(() => {
-    return Object.values(expenses).reduce((s, v) => s + (Number.isFinite(v) ? v : 0), 0)
+    return (expenses.rent || 0) + 
+      (expenses.food || 0) + 
+      (expenses.transport || 0) + 
+      (expenses.entertainment || 0) + 
+      (expenses.misc || 0)
   }, [expenses])
-  const available = Math.max(0, salary - totalExpenses)
+  const availableToInvest = Math.max(0, (student.salary || 0) - totalExpenses)
   const totalInvested = useMemo(
     () => Object.values(allocations).reduce((s, v) => s + (Number.isFinite(v) ? v : 0), 0),
     [allocations],
   )
 
   useEffect(() => {
-    setAllocations((a) => clampAllocationsToAvailable(a, available))
-  }, [available])
+    setAllocations((a) => clampAllocationsToAvailable(a, availableToInvest))
+  }, [availableToInvest])
 
   useEffect(() => {
     const payload = {
@@ -113,6 +119,8 @@ export default function App() {
           city={student.city}
           expenses={expenses}
           setExpenses={setExpenses}
+          totalExpenses={totalExpenses}
+          availableToInvest={availableToInvest}
           onProceed={() => setCurrent('investments')}
         />
       )
@@ -120,7 +128,7 @@ export default function App() {
     if (current === 'investments') {
       return (
         <Investments
-          available={available}
+          available={availableToInvest}
           allocations={allocations}
           setAllocations={setAllocations}
           stockPortfolio={stockPortfolio}
@@ -134,7 +142,7 @@ export default function App() {
         <Dashboard
           salary={salary}
           totalExpenses={totalExpenses}
-          available={available}
+          available={availableToInvest}
           allocations={allocations}
           returns={ASSET_RETURNS}
           onGoBack={() => setCurrent('investments')}
@@ -149,7 +157,7 @@ export default function App() {
         onStart={() => setCurrent('expenses')}
       />
     )
-  }, [allocations, available, current, expenses, salary, student, totalExpenses, stockPortfolio, hasSavedData])
+  }, [allocations, availableToInvest, current, expenses, salary, student, totalExpenses, stockPortfolio, hasSavedData])
 
   const stepIdx = { home: 1, expenses: 2, investments: 3, dashboard: 4 }[current]
   const helpText =
@@ -169,7 +177,7 @@ export default function App() {
           onNavigate={setCurrent}
           student={student}
           totalExpenses={totalExpenses}
-          available={available}
+          availableToInvest={availableToInvest}
           totalInvested={totalInvested}
           lastSavedAt={lastSavedAt}
           onReset={resetPortfolio}

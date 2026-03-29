@@ -8,7 +8,7 @@ const items = [
   { key: 'dashboard', label: 'Dashboard', icon: BarChart3 },
 ]
 
-export default function Sidebar({ current, onNavigate, student, totalExpenses, available, totalInvested, lastSavedAt, onReset }) {
+export default function Sidebar({ current, onNavigate, student, totalExpenses, availableToInvest, totalInvested, lastSavedAt, onReset }) {
   return (
     <aside className="hidden md:flex md:w-72 md:flex-col md:gap-6 bg-ff-sidebar border-r border-ff-border p-5">
       <div className="flex items-center gap-3">
@@ -55,7 +55,7 @@ export default function Sidebar({ current, onNavigate, student, totalExpenses, a
               <div className="flex justify-between items-center"><span className="text-ff-textSec">💰 Salary</span><span className="font-mono text-white">{formatINR(student.salary || 0)}</span></div>
               <div className="flex justify-between items-center"><span className="text-ff-textSec">📤 Expenses</span><span className="font-mono text-ff-danger">{formatINR(totalExpenses || 0)}</span></div>
               <div className="flex justify-between items-center"><span className="text-ff-textSec">📈 Invested</span><span className="font-mono text-ff-neon">{formatINR(totalInvested || 0)}</span></div>
-              <div className="flex justify-between items-center"><span className="text-ff-textSec">💵 Available</span><span className="font-mono text-ff-blue">{formatINR(available || 0)}</span></div>
+              <div className="flex justify-between items-center"><span className="text-ff-textSec">💵 Available</span><span className="font-mono text-ff-blue">{formatINR(availableToInvest || 0)}</span></div>
             </div>
             
             <div className="mt-5 text-[10px] text-ff-textMuted uppercase tracking-widest">
