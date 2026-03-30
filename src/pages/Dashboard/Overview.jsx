@@ -2,8 +2,8 @@ import { useState, useMemo } from 'react'
 import { Pie, PieChart, ResponsiveContainer, Tooltip, Legend, Cell } from 'recharts'
 import AnimatedNumber from '../../components/AnimatedNumber'
 import { formatINR } from '../../utils/formatters'
-import { calculateFutureValueMonthly } from '../../utils/calculations'
 import { COLORS } from '../../utils/constants'
+import { calculateSIPReturns } from '../../utils/calculations'
 
 function pctLabel(value, total) {
   if (total <= 0) return '0%'
@@ -14,12 +14,18 @@ export default function Overview({ invested, uninvested, pieData, totalPie, sala
   const [fastYears, setFastYears] = useState(10)
 
   const fastForwardValue = useMemo(() => {
-    return calculateFutureValueMonthly({
-      initial: invested,
+    if (!Number.isFinite(invested) || invested <= 0) return 0
+    
+    // blended can be 0 (returns just the principal), but not negative
+    const safeRate = Math.max(0, blended || 0)
+    
+    const result = calculateSIPReturns({
       monthly: invested,
-      annualRate: blended,
-      years: fastYears,
+      annualRate: safeRate,
+      years: fastYears
     })
+    
+    return Number.isFinite(result) ? Math.max(0, Math.round(result)) : 0
   }, [invested, blended, fastYears])
 
   if (invested === 0) {
@@ -108,30 +114,25 @@ export default function Overview({ invested, uninvested, pieData, totalPie, sala
           
           <div className="flex flex-wrap items-end justify-between gap-3 relative z-10 mb-8">
             <div>
-              <div className="text-lg font-extrabold tracking-tight text-white">Fast Forward</div>
-              <div className="mt-1 text-sm text-ff-textSec">Project ahead {fastYears} years</div>
+              <div className="text-lg font-extrabold tracking-tight text-white uppercase tracking-wider">Fast Forward</div>
+              <div className="mt-1 text-sm text-ff-textSec">Select a milestone</div>
             </div>
-            <div className="text-xs font-semibold text-ff-textSec bg-white/5 px-3 py-1.5 rounded-lg border border-white/10">
-              Blended return: <span className="font-extrabold text-white ml-1">{Math.round(blended * 100)}%</span>
-            </div>
-          </div>
-
-          <div className="relative z-10 mb-8">
-            <input
-              type="range"
-              min={1}
-              max={30}
-              step={1}
-              value={fastYears}
-              onChange={(e) => setFastYears(Number(e.target.value))}
-              className="w-full h-2 rounded-full appearance-none outline-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-6 [&::-webkit-slider-thumb]:h-6 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:shadow-glow [&::-moz-range-thumb]:w-6 [&::-moz-range-thumb]:h-6 [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-none [&::-moz-range-thumb]:shadow-glow"
-              style={{
-                background: `linear-gradient(90deg, #3B82F6 0%, #00FF94 ${(fastYears/30)*100}%, #1E2433 ${(fastYears/30)*100}%, #1E2433 100%)`
-              }}
-            />
-            <div className="mt-3 flex justify-between text-xs font-bold text-[#94A3B8]">
-              <span>1y</span>
-              <span>30y</span>
+            
+            <div className="flex bg-ff-bg rounded-lg p-1 border border-ff-border overflow-hidden">
+              {[1, 5, 10].map((y) => (
+                <button
+                  key={y}
+                  onClick={() => setFastYears(y)}
+                  className={[
+                    'px-4 py-1.5 rounded-md text-xs font-bold transition-all relative z-20',
+                    fastYears === y 
+                      ? 'bg-ff-neon text-[#0B0F19] shadow-[0_0_15px_rgba(0,255,148,0.4)]' 
+                      : 'text-ff-textMuted hover:text-white'
+                  ].join(' ')}
+                >
+                  {y}Y
+                </button>
+              ))}
             </div>
           </div>
 

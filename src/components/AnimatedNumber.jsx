@@ -27,7 +27,7 @@ function useCountUp(target, { durationMs = 450 } = {}) {
 
     rafRef.current = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(rafRef.current)
-  }, [t, durationMs, value])
+  }, [t, durationMs])
 
   return value
 }

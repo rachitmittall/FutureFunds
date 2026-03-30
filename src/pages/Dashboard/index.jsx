@@ -35,12 +35,13 @@ export default function Dashboard({ salary, totalExpenses, available, allocation
   const blended = useMemo(() => calculateBlendedRate(allocations, returns), [allocations, returns])
 
   const fiveYearHeroValue = useMemo(() => {
-    return calculateFutureValueMonthly({
-      initial: invested,
+    const result = calculateFutureValueMonthly({
+      initial: 0,
       monthly: invested,
       annualRate: blended,
       years: 5,
     })
+    return Number.isFinite(result) ? Math.max(0, Math.round(result)) : 0
   }, [invested, blended])
 
   return (

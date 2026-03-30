@@ -1,26 +1,32 @@
 export function calculateCompoundInterest({ initial = 0, annualRate = 0, years = 0 }) {
-  const i = Math.pow(1 + annualRate, 1 / 12) - 1
+  const r = annualRate > 1 ? annualRate / 100 : annualRate
+  const i = r / 12
   const n = Math.round(years * 12)
   if (n <= 0) return initial
   return initial * Math.pow(1 + i, n)
 }
 
 export function calculateSIPReturns({ monthly = 0, annualRate = 0, years = 0 }) {
-  const i = Math.pow(1 + annualRate, 1 / 12) - 1
+  const r = Math.abs(annualRate) > 1 ? annualRate / 100 : annualRate
+  const i = r / 12
   const n = Math.round(years * 12)
   if (n <= 0) return 0
   if (Math.abs(i) < 1e-9) return monthly * n
-  return monthly * ((Math.pow(1 + i, n) - 1) / i)
+  const pmt = Number.isFinite(monthly) ? monthly : 0
+  const res = pmt * ((Math.pow(1 + i, n) - 1) / i)
+  return Number.isFinite(res) ? Math.min(Math.max(0, res), 1e11) : 0
 }
 
 export function calculateFutureValueMonthly({ initial = 0, monthly = 0, annualRate = 0, years = 0 }) {
-  const i = Math.pow(1 + annualRate, 1 / 12) - 1
+  const r = Math.abs(annualRate) > 1 ? annualRate / 100 : annualRate
+  const i = r / 12
   const n = Math.round(years * 12)
   const p0 = Number.isFinite(initial) ? initial : 0
   const pmt = Number.isFinite(monthly) ? monthly : 0
   if (n <= 0) return p0
   if (Math.abs(i) < 1e-9) return p0 + pmt * n
-  return p0 * Math.pow(1 + i, n) + pmt * ((Math.pow(1 + i, n) - 1) / i)
+  const res = p0 * Math.pow(1 + i, n) + pmt * ((Math.pow(1 + i, n) - 1) / i)
+  return Number.isFinite(res) ? Math.min(Math.max(0, res), 1e11) : 0
 }
 
 export function calculateBlendedRate(allocations, returns) {
