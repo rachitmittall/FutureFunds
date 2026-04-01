@@ -6,41 +6,40 @@ export default async function handler(req, res) {
   const metalType = metal || 'gold';
 
   try {
-    // Use GoldAPI.io free tier
-    const symbols = { gold: 'XAU', silver: 'XAG' };
-    const symbol = symbols[metalType] || 'XAU';
-    
     const response = await fetch(
-      `https://api.frankfurter.app/latest?from=${symbol}&to=INR`,
-      { headers: { 'Accept': 'application/json' } }
+      'https://api.metals.dev/v1/latest?api_key=2DJKOUUHUSKPV7DK9RNX428DK9RNX&currency=INR&unit=g'
     );
     
     if (!response.ok) throw new Error('API failed');
     
     const data = await response.json();
-    const pricePerOzINR = data.rates?.INR;
     
-    if (!pricePerOzINR) throw new Error('No price');
+    // metals.dev returns prices per gram in INR directly
+    const prices = {
+      gold: data.metals?.gold,
+      silver: data.metals?.silver
+    };
     
-    // Convert troy oz to gram
-    const pricePerGramINR = pricePerOzINR * 0.0321507;
+    const price = prices[metalType];
+    if (!price) throw new Error('No price found');
     
     return res.status(200).json({
       metal: metalType,
-      pricePerGramINR: parseFloat(pricePerGramINR.toFixed(2)),
+      pricePerGramINR: parseFloat(price.toFixed(2)),
       live: true
     });
 
   } catch (error) {
-    // Reliable fallback
+    // Accurate March 2026 fallbacks
     const fallbacks = { 
-      gold: 7234, 
-      silver: 90 
+      gold: 14842,
+      silver: 105
     };
     return res.status(200).json({
       metal: metalType,
-      pricePerGramINR: fallbacks[metalType] || 7234,
-      live: false
+      pricePerGramINR: fallbacks[metalType] || 14842,
+      live: false,
+      error: error.message
     });
   }
 }
