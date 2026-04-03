@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { BarChart, Bar, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { formatINR } from '../../utils/formatters'
 import { calculateFutureValueMonthly } from '../../utils/calculations'
@@ -6,16 +6,53 @@ import { ASSET_LABELS, HISTORICAL_RETURNS } from '../../utils/constants'
 
 export default function TimeMachine({ invested, allocations }) {
   const [startedYearsAgo, setStartedYearsAgo] = useState(10)
+  const [debouncedYears, setDebouncedYears] = useState(10)
+  const [liveReturns, setLiveReturns] = useState(null)
+  const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedYears(startedYearsAgo), 400)
+    return () => clearTimeout(t)
+  }, [startedYearsAgo])
+
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+    fetch(`/api/historicalReturns?years=${debouncedYears}`)
+      .then(res => {
+        if (!res.ok) throw new Error('API not available')
+        const contentType = res.headers.get('content-type')
+        if (contentType && contentType.includes('text/html')) throw new Error('HTML returned (Vite fallback)')
+        return res.json()
+      })
+      .then(data => {
+        if(active && data.returns) {
+           setLiveReturns(data.returns)
+        }
+      })
+      .catch((e) => {
+        // Silently fallback to HISTORICAL_RETURNS if API fails or isn't proxied locally
+      })
+      .finally(() => {
+        if(active) setLoading(false);
+      });
+    return () => { active = false };
+  }, [debouncedYears])
 
   const historical = useMemo(() => {
     const years = startedYearsAgo
     const totalInvestedAmt = invested * 12 * years
     const assets = Object.keys(ASSET_LABELS).map((k) => {
       const amount = allocations[k] ?? 0
+      
+      const annualRate = (liveReturns && liveReturns[k] !== null && liveReturns[k] !== undefined) 
+          ? liveReturns[k] 
+          : HISTORICAL_RETURNS[k];
+
       const worth = calculateFutureValueMonthly({
         initial: 0,
         monthly: amount,
-        annualRate: HISTORICAL_RETURNS[k],
+        annualRate: annualRate,
         years,
       })
       return { key: k, name: ASSET_LABELS[k], invested: amount * 12 * years, worth }
@@ -23,7 +60,7 @@ export default function TimeMachine({ invested, allocations }) {
     const totalWorth = assets.reduce((s, a) => s + a.worth, 0)
     const multiple = totalInvestedAmt > 0 ? totalWorth / totalInvestedAmt : 0
     return { assets, totalInvestedAmt, totalWorth, multiple }
-  }, [startedYearsAgo, invested, allocations])
+  }, [startedYearsAgo, invested, allocations, liveReturns])
 
   const historicalMsg =
     historical.totalWorth > 10000000
@@ -39,8 +76,19 @@ export default function TimeMachine({ invested, allocations }) {
       <div className="absolute -bottom-20 -left-20 w-96 h-96 bg-ff-gold/10 blur-[100px] rounded-full pointer-events-none" />
       
       <div className="text-center mb-12 relative z-10">
-        <h1 className="text-3xl md:text-5xl font-extrabold text-white tracking-tight mb-4">🕰️ What If You Had Started Earlier?</h1>
-        <p className="text-lg text-ff-textSec max-w-2xl mx-auto">
+        <h1 className="text-3xl md:text-5xl font-extrabold text-white tracking-tight mb-4">
+          🕰️ What If You Had Started Earlier?
+        </h1>
+        {loading ? (
+          <div className="text-sm font-bold text-ff-neon animate-pulse mb-2 tracking-widest uppercase">
+            Fetching Live Return Data...
+          </div>
+        ) : (
+          <div className="text-sm font-bold text-ff-blue mb-2 tracking-widest uppercase opacity-80">
+            Powered By Live Market Activity
+          </div>
+        )}
+        <p className="text-lg text-ff-textSec max-w-2xl mx-auto mt-2">
           Imagine you invested <span className="text-white font-bold">{formatINR(invested)}</span> every month consistently starting <span className="text-white font-bold">{startedYearsAgo}</span> years ago.
         </p>
       </div>
